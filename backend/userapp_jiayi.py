@@ -1,14 +1,14 @@
 import json
 
-from db import db
-from db import User, Category, Game
+from userdb_jiayi import db
+from userdb_jiayi import User, Category, Game
 from flask import Flask
 from flask import request
 
-# db_filename = ""
+db_filename = "gameapp.db"
 app = Flask(__name__)
 
-# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ECHO"] = True
 
@@ -23,7 +23,8 @@ def failure_response(message, code=404):
     return json.dumps({"success": False, "error": message}), code
 
 
-# users routes here
+# -- USER ROUTES --------------------------------------------------
+
 @app.route("/")
 @app.route("/api/users/")
 def get_users():
@@ -62,6 +63,31 @@ def delete_user(user_id):
     db.session.commit()
     return success_response(user.serialize())
 
+# -- CATEGORY ROUTES --------------------------------------------------
+
+@app.route("/api/categories/")
+def get_categories():
+    return success_response([c.serialize_without_game() for c in Category.query.all()])
+
+@app.route("/api/categories/", methods=["POST"])
+def create_category():
+    body = json.loads(request.data)
+    title = body.get('title')
+    if title is None:
+        return failure_response("Title cannot be empty")
+    new_category = Category(title=title)
+    db.session.add(new_category)
+    db.session.commit()
+    return success_response(new_category.serialize(), 201)
+
+@app.route("/api/categories/<int:category_id>/")
+def get_category(category_id):
+    category = Category.query.filter_by(id=category_id).first()
+    if category is None:
+        return failure_response("Category not found!")
+    return success_response(category.serialize())
+
+# -- GAME ROUTES --------------------------------------------------
 
 @app.route("/api/games/<int:game_id>/add/", methods=["POST"])
 def add_user(game_id):
