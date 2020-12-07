@@ -1,0 +1,98 @@
+import json
+
+from db import db
+from db import User, Category, Game
+from flask import Flask
+from flask import request
+
+# db_filename = ""
+app = Flask(__name__)
+
+# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ECHO"] = True
+
+db.init_app(app)
+with app.app_context():
+    db.create_all()
+
+def success_response(data, code=200):
+    return json.dumps({"success": True, "data": data}), code
+
+def failure_response(message, code=404):
+    return json.dumps({"success": False, "error": message}), code
+
+
+# users routes here
+@app.route("/")
+@app.route("/api/users/")
+def get_users():
+    return success_response([u.serialize() for u in User.query.all()])
+
+
+@app.route("/api/users/", methods=["POST"])
+def create_user():
+    body = json.loads(request.data)
+    name = body.get('name')
+    if name is None:
+        return failure_response("Name cannot be empty")
+    username = body.get('username')
+    if username is None:
+        return failure_response("Username cannot be empty")
+    new_user = User(name=name, username=username)
+    db.session.add(new_user)
+    db.session.commit()
+    return success_response(new_user.serialize(), 201)
+
+
+@app.route("/api/users/<int:user_id>/")
+def get_user(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if user is None:
+        return failure_response("User not found")
+    return success_response(user.serialize())
+
+
+@app.route("/api/users/<int:user_id>/", methods=["DELETE"])
+def delete_user(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if user is None:
+        return failure_response("User not found")
+    db.session.delete(user)
+    db.session.commit()
+    return success_response(user.serialize())
+
+
+@app.route("/api/games/<int:game_id>/add/", methods=["POST"])
+def add_user(game_id):
+    game = Game.query.filter_by(id=game_id).first()
+    if game is None:
+        return failure_response("Game not found")
+    body = json.loads(request.data)
+    user_id = body.get('user_id')
+    if user_id is None:
+        return failure_response("User ID cannot be empty")
+    type = body.get('type')
+    if type is None:
+        return failure_response("Type cannot be empty")
+    user = User.query.filter_by(id=user_id).first()
+    if user is None:
+        return failure_response("User not found")
+
+    if type == "player":
+        user.user_type = "player"
+        user.games_player.append(game)
+        game.players.append(user)
+        
+    else:
+        user.user_type = "publisher"
+        user.games_publisher.append(game)
+        game.publishers.append(user)
+        
+    db.session.commit()
+    return success_response(game.serialize(), 201)
+
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
