@@ -89,6 +89,42 @@ def get_category(category_id):
 
 # -- GAME ROUTES --------------------------------------------------
 
+@app.route("/api/games/", methods=["POST"])
+def create_game():
+    body = json.loads(request.data)
+    title = body.get('title')
+    if title is None:
+        return failure_response("Title cannot be empty")
+    platform = body.get('platform')
+    if platform is None:
+        return failure_response("Platform cannot be empty")
+    publisher = body.get('publisher')
+    if publisher is None:
+        return failure_response("Publisher cannot be empty")
+    release_date = body.get('release_date')
+    if release_date is None:
+        return failure_response("Release_date cannot be empty")
+    category_id = body.get('category_id')
+    if category_id is None:
+        return failure_response("Category_id cannot be empty")
+    category = Category.query.filter_by(id=category_id).first()
+    if category is None:
+        return failure_response("Category not found!")
+    new_game = Game(title=title, platform=platform, publisher=publisher, release_date=release_date, category_id=category_id)
+    db.session.add(new_game)
+    db.session.commit()
+    return success_response(new_game.serialize(), 201)
+    
+    
+
+@app.route("/api/games/<int:game_id>/", methods=["GET"])
+def get_game(game_id):
+    game = Game.query.filter_by(id=game_id).first()
+    if game is None:
+        return failure_response("Game not found!")
+    return success_response(category.serialize())
+
+
 @app.route("/api/games/<int:game_id>/add/", methods=["POST"])
 def add_user(game_id):
     game = Game.query.filter_by(id=game_id).first()
