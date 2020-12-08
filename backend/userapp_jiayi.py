@@ -1,7 +1,7 @@
 import json
 
-from userdb_jiayi import db
-from userdb_jiayi import User, Category, Game
+from db import db
+from db import User, Category, Game
 from flask import Flask
 from flask import request
 
