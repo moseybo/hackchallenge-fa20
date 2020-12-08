@@ -129,14 +129,14 @@ def get_game(game_id):
 def add_user(game_id):
     game = Game.query.filter_by(id=game_id).first()
     if game is None:
-        return failure_response("Game not found")
+        return failure_response("Game not found!")
     body = json.loads(request.data)
     user_id = body.get('user_id')
     if user_id is None:
         return failure_response("User ID cannot be empty")
     user = User.query.filter_by(id=user_id).first()
     if user is None:
-        return failure_response("User not found")
+        return failure_response("User not found!")
 
     user.favorites.append(game)
     game.players.append(user)
