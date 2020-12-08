@@ -122,7 +122,7 @@ def get_game(game_id):
     game = Game.query.filter_by(id=game_id).first()
     if game is None:
         return failure_response("Game not found!")
-    return success_response(category.serialize())
+    return success_response(game.serialize())
 
 
 @app.route("/api/games/<int:game_id>/add/", methods=["POST"])
@@ -134,25 +134,15 @@ def add_user(game_id):
     user_id = body.get('user_id')
     if user_id is None:
         return failure_response("User ID cannot be empty")
-    type = body.get('type')
-    if type is None:
-        return failure_response("Type cannot be empty")
     user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found")
 
-    if type == "player":
-        user.user_type = "player"
-        user.games_player.append(game)
-        game.players.append(user)
-        
-    else:
-        user.user_type = "publisher"
-        user.games_publisher.append(game)
-        game.publishers.append(user)
+    user.favorites.append(game)
+    game.players.append(user)
         
     db.session.commit()
-    return success_response(game.serialize(), 201)
+    return success_response(user.serialize(), 201)
 
 
 

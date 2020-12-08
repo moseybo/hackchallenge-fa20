@@ -21,51 +21,29 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     username = db.Column(db.String, nullable=False)
-    games_publisher = db.relationship('Game', secondary=association_table_publisher, back_populates='publishers')
-    games_player = db.relationship('Game', secondary=game_to_player_association_table, back_populates='players')
-    user_type = ""
+    favorites = db.relationship('Game', secondary=game_to_player_association_table, back_populates='players')
 
     def __init__(self, **kwargs):
         self.name = kwargs.get('name')
         self.username = kwargs.get('username')
 
     def serialize(self):
-        if self.user_type == "player":
-            if self.games_player is None:
-                games = []
-            else:
-                games = [game.serialize() for game in self.games_player]
-            return {
-                'id': self.id,
-                'name': self.name,
-                'username': self.username,
-                'games': self.games_player
-            }
-        else:
-            if self.games_publisher is None:
-                games = []
-            else:
-                games = [game.serialize() for game in self.games_publisher]
-            return {
-                'id': self.id,
-                'name': self.name,
-                'username': self.username,
-                'games': self.games_publisher
-            }
+        publishers_out = []
+        [publishers_out.append(game.publisher) for game in self.favorites if game.publisher not in publishers_out]
+        return {
+            'id': self.id,
+            'name': self.name,
+            'username': self.username,
+            'favorites': [game.serialize() for game in self.favorites],
+            'publishers': publishers_out
+        }
 
     def serialize_without_game(self):
-        if self.user_type == "player":
-            return {
-                'id': self.id,
-                'name': self.name,
-                'username': self.username
-            }
-        else:
-            return {
-                'id': self.id,
-                'name': self.name,
-                'username': self.username
-            }
+        return {
+            'id': self.id,
+            'name': self.name,
+            'username': self.username
+        }
 
 class Category(db.Model):
     __tablename__ = 'category'
@@ -80,7 +58,7 @@ class Category(db.Model):
         return {
             "id": self.id,
             "title": self.title,
-            "games": [g.serialize_short() for g in self.games]
+            "games": [g.serialize_without_category() for g in self.games]
         }
     
     def serialize_without_game(self):
@@ -97,13 +75,14 @@ class Game(db.Model):
     publisher = db.Column(db.String, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False)
     release_date = db.Column(db.String, nullable=False)
-    players = db.relationship("User", secondary=game_to_player_association_table, back_populates="games_player")
+    players = db.relationship("User", secondary=game_to_player_association_table, back_populates="favorites")
     
     def __init__(self, **kwargs):
         self.title = kwargs.get("title")
         self.platform = kwargs.get("platform")
         self.publisher = kwargs.get("publisher")
         self.release_date = kwargs.get("release_date")
+        self.category_id = kwargs.get("category_id")
 
     def serialize(self):
         return {
@@ -119,7 +98,7 @@ class Game(db.Model):
             }
         }
     
-    def serialize_without_category():
+    def serialize_without_category(self):
         return {
             "id": self.id,
             "title": self.title,
