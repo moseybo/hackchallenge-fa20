@@ -85,10 +85,7 @@ class Game(db.Model):
             "publisher": self.publisher,
             "release_date": self.release_date,
             "players": [u.serialize_without_game() for u in self.players],
-            "category": {
-                "id": self.category_id,
-                "title": Category.query.filter_by(id=self.category_id).first().title
-            }
+            "category": Category.query.filter_by(id=self.category_id).first().serialize_without_game()
         }
     
     def serialize_without_category(self):
