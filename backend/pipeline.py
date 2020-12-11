@@ -4,7 +4,7 @@ from threading import Thread
 from time import sleep
 import unittest
 
-from userapp_jiayi import app
+from app import app
 import requests
 
 # URL pointing to your local dev host
