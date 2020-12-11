@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  hackchallenge-fa20:
-    image: jacky2377/hackchallenge-fa20
-    ports:
-      - "5000:5000"
+    hackchallenge-fa20:
+        image: jacky2377/hackchallenge-fa20
+        ports:
+            - "5000:5000"

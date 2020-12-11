@@ -5,6 +5,6 @@ WORKDIR usr/app
 
 COPY . .
 
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
-CMD python userapp_jiayi.py
+CMD python3 app.py
