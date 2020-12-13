@@ -2,7 +2,7 @@ import json
 import os
 
 from db import db
-from db import User, Category, Game
+from db import User, Category, Game, Asset
 from flask import Flask
 from flask import request
 import users_dao
@@ -251,7 +251,19 @@ def secret_message():
         {"message": "You have successfully implemented sessions."}
     )
 
+# -- ASSET ROUTES --------------------------------------------------
 
+@app.route("/api/upload/", methods=["POST"])
+def upload():
+    body = json.loads(request.data)
+    image_data = body.get("image_data")
+    if image_data is None:
+        return failure_response("No base64 URL to be found!")
+
+    asset = Asset(image_data=image_data)
+    db.session.add(asset)
+    db.session.commit()
+    return success_response(asset.serialize(), 201)
 
 
 if __name__ == "__main__":
