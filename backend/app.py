@@ -74,6 +74,7 @@ def delete_user(user_id):
 def get_categories():
     return success_response([c.serialize_without_game() for c in Category.query.all()])
 
+
 @app.route("/api/categories/", methods=["POST"])
 def create_category():
     body = json.loads(request.data)
@@ -84,6 +85,7 @@ def create_category():
     db.session.add(new_category)
     db.session.commit()
     return success_response(new_category.serialize(), 201)
+
 
 @app.route("/api/categories/<int:category_id>/")
 def get_category(category_id):
@@ -97,6 +99,7 @@ def get_category(category_id):
 @app.route("/api/games/")
 def get_games():
     return success_response([g.serialize_without_category() for g in Game.query.all()])
+
 
 @app.route("/api/games/", methods=["POST"])
 def create_game():
@@ -123,7 +126,6 @@ def create_game():
     db.session.add(new_game)
     db.session.commit()
     return success_response(new_game.serialize(), 201)
-    
     
 
 @app.route("/api/games/<int:game_id>/", methods=["GET"])
@@ -154,7 +156,6 @@ def add_user(game_id):
     return success_response(user.serialize(), 201)
 
 
-
 # -- AUTHORIZATION ROUTES --------------------------------------------------
 
 def extract_token(request):
@@ -174,11 +175,17 @@ def register_account():
     body = json.loads(request.data)
     email = body.get("email")
     password = body.get("password")
+    username = body.get("username")
+    name = body.get("name")
 
     if email is None or password is None:
         return json.dumps({"error": "Invalid email or password"})
+    if username is None:
+        return failure_response("Username cannot be empty")
+    if name is None:
+        return failure_response("Name cannot be empty")
     
-    was_created, user = users_dao.create_user(email, password)
+    was_created, user = users_dao.create_user(email, password, username, name)
 
     if not was_created:
         return json.dumps({"error": "User already exists."})

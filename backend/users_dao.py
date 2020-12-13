@@ -24,18 +24,18 @@ def verify_credentials(email, password):
     return optional_user.verify_password(password), optional_user
 
 
-def create_user(email, password):
+def create_user(email, password, username, name):
     optional_user = get_user_by_email(email)
 
     if optional_user is not None:
         return False, optional_user
     
-    user = User(email=email, password=password)
+    user = User(email=email, password=password, username=username, name=name)
 
     db.session.add(user)
     db.session.commit()
 
-    return True,user
+    return True, user
 
 
 def renew_session(update_token):
