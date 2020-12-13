@@ -169,7 +169,7 @@ def extract_token(request):
     return True, bearer_token
 
 
-@app.route("/register/", methods=["POST"])
+@app.route("/api/register/", methods=["POST"])
 def register_account():
     body = json.loads(request.data)
     email = body.get("email")
@@ -192,7 +192,7 @@ def register_account():
     )
 
 
-@app.route("/login/", methods=["POST"])
+@app.route("/api/login/", methods=["POST"])
 def login():
     body = json.loads(request.data)
     email = body.get("email")
@@ -215,7 +215,7 @@ def login():
     )
 
 
-@app.route("/session/", methods=["POST"])
+@app.route("/api/session/", methods=["POST"])
 def update_session():
     was_successful, update_token = extract_token(request)
 
@@ -236,7 +236,7 @@ def update_session():
     )
 
 
-@app.route("/secret/", methods=["GET"])
+@app.route("/api/secret/", methods=["GET"])
 def secret_message():
     was_successful, session_token = extract_token(request)
 
