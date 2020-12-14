@@ -262,12 +262,21 @@ def secret_message():
 
 @app.route("/api/upload/", methods=["POST"])
 def upload():
+    was_successful, session_token = extract_token(request)
+
+    if not was_successful:
+        return session_token
+
+    user = users_dao.get_user_by_session_token(session_token)
+    if not user or not user.verify_session_token(session_token):
+        return json.dumps({"error": "Invalid session token."})
+
     body = json.loads(request.data)
     image_data = body.get("image_data")
     if image_data is None:
         return failure_response("No base64 URL to be found!")
-
-    asset = Asset(image_data=image_data)
+    asset = Asset(image_data=image_data, user_id=user.id)
+    asset.user = user
     db.session.add(asset)
     db.session.commit()
     return success_response(asset.serialize(), 201)

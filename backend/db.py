@@ -33,6 +33,7 @@ class User(db.Model):
     name = db.Column(db.String, nullable=False)
     username = db.Column(db.String, nullable=False)
     favorites = db.relationship('Game', secondary=game_to_user_association_table, back_populates='players')
+    profile_picture = db.relationship("Asset", uselist=False, back_populates="user")
 
     # User information
     email = db.Column(db.String, nullable=False, unique=True)
@@ -70,16 +71,19 @@ class User(db.Model):
     def verify_update_token(self, update_token):
         return update_token == self.update_token
    
-
     def serialize(self):
         publishers_out = []
         [publishers_out.append(game.publisher) for game in self.favorites if game.publisher not in publishers_out]
+        profile_url = ""
+        if self.profile_picture is not None:
+            profile_url = f"{self.profile_picture.base_url}/{self.profile_picture.salt}.{self.profile_picture.extension}"
         return {
             'id': self.id,
             'name': self.name,
             'username': self.username,
             'favorites': [game.serialize() for game in self.favorites],
-            'publishers': publishers_out
+            'publishers': publishers_out,
+            'profile_url': profile_url
         }
 
     def serialize_without_game(self):
@@ -157,8 +161,12 @@ class Asset(db.Model):
     height = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False)
 
+    # Associated user
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship("User", back_populates="profile_picture")
+
     def __init__(self, **kwargs):
-        self.create(kwargs.get("image_data"))
+        self.create(kwargs.get("image_data"), kwargs.get("user_id"))
 
     def serialize(self):
         return {
@@ -166,7 +174,7 @@ class Asset(db.Model):
             "created_at": str(self.created_at),
         }
 
-    def create(self, image_data):
+    def create(self, image_data, user_id):
         try:
             # base64 string --> .png --> png
             ext = guess_extension(guess_type(image_data)[0])[1:]
@@ -195,6 +203,7 @@ class Asset(db.Model):
 
             img_filename = f"{salt}.{ext}"
             self.upload(img, img_filename)
+            self.user_id = user_id
         except Exception as e:
             print(f"Unable to create image due to {e}")
 
