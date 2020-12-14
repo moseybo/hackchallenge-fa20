@@ -96,7 +96,7 @@ def get_category(category_id):
 
 # -- GAME ROUTES --------------------------------------------------
 
-@app.route("/api/games/")
+@app.route("/api/games/", methods=["GET"])
 def get_games():
     return success_response([g.serialize() for g in Game.query.all()])
 
