@@ -79,7 +79,7 @@ class TestRoutes(unittest.TestCase):
             id = category["id"]
             title = category["title"]
             category_dict[title] = id
-        for game in games_list[:1000]:
+        for game in games_list[:500]:
             game["category_id"] = category_dict.get(game["category_id"])
             res = requests.post(gen_games_path(), data=json.dumps(game)) 
             body = unwrap_response(res)
@@ -92,4 +92,3 @@ if __name__ == "__main__":
     thread = Thread(target=run_requests)
     thread.start()
     app.run(host="localhost", port=5000, debug=False)
-    
